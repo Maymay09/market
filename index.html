@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Apo Ultra Modern Market — Find Any Shop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --gold:#C9A227;
+    --gold-soft:#EBDFB4;
+    --green-open:#2F8F62;
+    --red-closed:#B23A48;
+    --radius:18px;
+    --radius-sm:10px;
+    --shadow:0 12px 30px -10px rgba(11,42,74,0.25);
+  }
+  html[data-theme="light"]{
+    --bg:#FBF8F2;
+    --surface:#FFFFFF;
+    --surface-2:#F3EEE2;
+    --ink:#16223A;
+    --ink-soft:#5C6B82;
+    --brand:#0B2A4A;
+    --brand-soft:#122F52;
+    --border:rgba(11,42,74,0.10);
+    --map-bg:#F3EFE4;
+  }
+  html[data-theme="dark"]{
+    --bg:#0A2138;
+    --surface:#0F2C4A;
+    --surface-2:#143456;
+    --ink:#F4F1E8;
+    --ink-soft:#AFC0D6;
+    --brand:#0B2A4A;
+    --brand-soft:#163C63;
+    --border:rgba(255,255,255,0.10);
+    --map-bg:#0C2740;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;}
+  html,body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Plus Jakarta Sans',sans-serif;
+    -webkit-tap-highlight-color:transparent;
+  }
+  h1,h2,h3,.display{
+    font-family:'Fraunces',serif;
+    letter-spacing:-0.01em;
+    margin:0;
+  }
+  .mono{font-family:'JetBrains Mono',monospace; letter-spacing:0.02em;}
+  button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit;}
+  button:focus-visible, input:focus-visible, [tabindex]:focus-visible{
+    outline:3px solid var(--gold); outline-offset:2px;
+  }
+  a{color:inherit;}
+  .app{max-width:1180px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column;}
+
+  /* ---------- HEADER ---------- */
+  header.top{
+    position:sticky; top:0; z-index:30;
+    background:var(--brand); color:#fff;
+    padding:14px 16px calc(14px + env(safe-area-inset-top,0px));
+    padding-top:14px;
+  }
+  .top-row{display:flex; align-items:center; justify-content:space-between; gap:12px;}
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand .mark{
+    width:38px;height:38px;border-radius:11px;
+    background:linear-gradient(135deg,var(--gold),#9C7A12);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Fraunces',serif; font-weight:700; color:#0B2A4A; font-size:18px;
+    flex-shrink:0;
+  }
+  .brand .name{font-size:15px; font-weight:700; line-height:1.15;}
+  .brand .tag{font-size:11px; color:#C7D4E4; letter-spacing:0.04em;}
+  .icon-btn{
+    width:38px;height:38px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,0.12); font-size:17px; flex-shrink:0;
+  }
+  .search-wrap{margin-top:14px; position:relative;}
+  .search-bar{
+    display:flex; align-items:center; gap:10px;
+    background:rgba(255,255,255,0.96); border-radius:14px;
+    padding:12px 14px; box-shadow:var(--shadow);
+  }
+  .search-bar input{
+    border:none; outline:none; background:none; flex:1;
+    font-size:15px; color:#16223A; font-weight:500;
+  }
+  .search-bar input::placeholder{color:#8C97A8;}
+  .search-bar .clear{font-size:13px; color:#8C97A8; padding:4px;}
+  .suggest{
+    position:absolute; left:0; right:0; top:calc(100% + 8px);
+    background:var(--surface); border-radius:var(--radius-sm);
+    box-shadow:var(--shadow); overflow:hidden; z-index:40;
+    border:1px solid var(--border);
+  }
+  .suggest button{
+    display:flex; width:100%; align-items:center; gap:10px;
+    padding:11px 14px; text-align:left; font-size:13.5px; color:var(--ink);
+    border-bottom:1px solid var(--border);
+  }
+  .suggest button:last-child{border-bottom:none;}
+  .suggest button .sg-icon{font-size:16px;}
+  .suggest button .sg-sub{color:var(--ink-soft); font-size:12px;}
+  .suggest button:hover{background:var(--surface-2);}
+
+  /* ---------- CHIPS ---------- */
+  .chip-rail{
+    display:flex; gap:8px; overflow-x:auto; padding:14px 16px 4px;
+    scrollbar-width:none;
+  }
+  .chip-rail::-webkit-scrollbar{display:none;}
+  .chip{
+    flex-shrink:0; padding:9px 16px; border-radius:999px;
+    background:var(--surface); border:1px solid var(--border);
+    font-size:13px; font-weight:600; color:var(--ink-soft);
+    display:flex; align-items:center; gap:6px; white-space:nowrap;
+  }
+  .chip.active{background:var(--gold); border-color:var(--gold); color:#1A1306;}
+
+  /* ---------- MAIN ---------- */
+  main{flex:1; padding:6px 16px 110px;}
+  .section-title{
+    display:flex; align-items:baseline; justify-content:space-between; margin:22px 2px 12px;
+  }
+  .section-title h2{font-size:19px; font-weight:600;}
+  .section-title .count{font-size:12.5px; color:var(--ink-soft);}
+
+  .announce{
+    margin-top:18px; background:var(--brand-soft); color:#F4F1E8;
+    border-radius:var(--radius); padding:13px 16px; font-size:13px;
+    display:flex; gap:10px; align-items:flex-start;
+    border:1px solid rgba(255,255,255,0.08);
+  }
+  .announce b{color:var(--gold);}
+
+  /* Featured carousel */
+  .featured-rail{display:flex; gap:12px; overflow-x:auto; padding-bottom:6px;}
+  .feat-card{
+    flex-shrink:0; width:160px; background:var(--surface); border-radius:var(--radius);
+    border:1px solid var(--border); overflow:hidden; box-shadow:var(--shadow); cursor:pointer;
+  }
+  .feat-card .tile{height:90px;}
+  .feat-card .body{padding:10px 12px 12px;}
+  .feat-card .sname{font-size:13px; font-weight:700; line-height:1.25;}
+  .feat-card .ssub{font-size:11px; color:var(--ink-soft); margin-top:3px;}
+
+  .tile{
+    display:flex; align-items:center; justify-content:center; font-size:26px;
+    color:#fff; position:relative;
+  }
+  .tile .num{
+    position:absolute; bottom:6px; right:8px; font-size:10px; font-weight:700;
+    background:rgba(0,0,0,0.28); padding:2px 6px; border-radius:6px;
+  }
+
+  /* View toggle */
+  .view-toggle{
+    display:flex; gap:6px; background:var(--surface); border:1px solid var(--border);
+    border-radius:12px; padding:4px; margin-top:18px; width:max-content;
+  }
+  .view-toggle button{padding:8px 16px; border-radius:9px; font-size:13px; font-weight:700; color:var(--ink-soft);}
+  .view-toggle button.active{background:var(--brand); color:#fff;}
+
+  .stage{margin-top:14px;}
+
+  /* List results */
+  .result-card{
+    display:flex; gap:12px; background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--radius); padding:12px; margin-bottom:10px; cursor:pointer;
+    transition:border-color .15s;
+  }
+  .result-card:hover{border-color:var(--gold);}
+  .result-card .tile{width:64px; height:64px; border-radius:13px; flex-shrink:0; font-size:24px;}
+  .result-card .info{flex:1; min-width:0;}
+  .result-card .row1{display:flex; justify-content:space-between; gap:8px;}
+  .result-card .rname{font-size:14.5px; font-weight:700;}
+  .result-card .shopno{
+    font-size:11px; padding:2px 7px; border-radius:6px; background:var(--surface-2); color:var(--ink-soft); flex-shrink:0;
+  }
+  .result-card .rmeta{font-size:12px; color:var(--ink-soft); margin-top:3px;}
+  .result-card .rprods{font-size:12px; color:var(--ink-soft); margin-top:4px;}
+  .badge{font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px; display:inline-flex; align-items:center; gap:4px;}
+  .badge.open{background:rgba(47,143,98,0.12); color:var(--green-open);}
+  .badge.closed{background:rgba(178,58,72,0.12); color:var(--red-closed);}
+  .stars{color:var(--gold); font-size:12px; letter-spacing:1px;}
+  .row-actions{display:flex; gap:8px; margin-top:8px;}
+  .pill-btn{
+    font-size:12px; font-weight:700; padding:7px 12px; border-radius:9px;
+    background:var(--brand); color:#fff; display:flex; align-items:center; gap:5px;
+  }
+  .pill-btn.ghost{background:var(--surface-2); color:var(--ink);}
+  .empty-state{
+    text-align:center; padding:50px 20px; color:var(--ink-soft);
+  }
+  .empty-state .em{font-size:32px; margin-bottom:10px;}
+
+  /* MAP */
+  .map-shell{
+    position:relative; border-radius:var(--radius); overflow:hidden;
+    background:var(--map-bg); border:1px solid var(--border); height:440px;
+    box-shadow:var(--shadow); touch-action:none;
+  }
+  .map-shell svg{width:100%; height:100%; display:block; cursor:grab;}
+  .map-shell svg:active{cursor:grabbing;}
+  .map-controls{
+    position:absolute; top:12px; right:12px; display:flex; flex-direction:column; gap:6px; z-index:5;
+  }
+  .map-controls button{
+    width:34px; height:34px; border-radius:10px; background:var(--surface);
+    box-shadow:var(--shadow); font-size:16px; font-weight:700; color:var(--brand);
+  }
+  .locate-btn{
+    position:absolute; bottom:12px; right:12px; background:var(--surface); box-shadow:var(--shadow);
+    border-radius:10px; padding:8px 12px; font-size:12px; font-weight:700; display:flex; gap:6px; align-items:center; z-index:5;
+  }
+  .legend{
+    position:absolute; left:12px; bottom:12px; background:var(--surface); border-radius:10px;
+    padding:8px 10px; box-shadow:var(--shadow); font-size:10.5px; z-index:5; display:grid;
+    grid-template-columns:1fr 1fr; gap:3px 10px; max-width:230px;
+  }
+  .legend .lg-item{display:flex; align-items:center; gap:5px; color:var(--ink-soft); font-weight:600;}
+  .legend .sw{width:8px; height:8px; border-radius:2px; flex-shrink:0;}
+  .zone-label{font-family:'Fraunces',serif; font-weight:600; fill:rgba(255,255,255,0.92); pointer-events:none;}
+  .pin-label{font-size:9px; font-weight:700; fill:var(--ink); pointer-events:none;}
+
+  /* Directions panel */
+  .directions{
+    margin-top:14px; background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--radius); padding:16px; box-shadow:var(--shadow);
+  }
+  .directions .dhead{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
+  .directions .dstats{display:flex; gap:18px; margin-top:10px;}
+  .directions .dstat b{font-size:18px; font-family:'JetBrains Mono',monospace; display:block; color:var(--brand);}
+  html[data-theme="dark"] .directions .dstat b{color:var(--gold);}
+  .directions .dstat span{font-size:11px; color:var(--ink-soft);}
+  .steps{margin-top:14px; padding:0; list-style:none;}
+  .steps li{
+    display:flex; gap:10px; padding:9px 0; border-top:1px solid var(--border); font-size:13px;
+  }
+  .steps li:first-child{border-top:none;}
+  .steps li .stepnum{
+    width:20px; height:20px; border-radius:50%; background:var(--brand); color:#fff;
+    font-family:'JetBrains Mono',monospace; font-size:11px; display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; margin-top:1px;
+  }
+  .close-directions{margin-top:12px; font-size:12.5px; font-weight:700; color:var(--ink-soft);}
+
+  /* Shop sheet */
+  .overlay{
+    position:fixed; inset:0; background:rgba(8,18,32,0.55); z-index:60;
+    opacity:0; pointer-events:none; transition:opacity .2s;
+  }
+  .overlay.open{opacity:1; pointer-events:auto;}
+  .sheet{
+    position:fixed; left:0; right:0; bottom:0; z-index:61; max-width:1180px; margin:0 auto;
+    background:var(--surface); border-radius:22px 22px 0 0; box-shadow:0 -20px 50px rgba(0,0,0,0.3);
+    transform:translateY(100%); transition:transform .28s cubic-bezier(.2,.8,.2,1);
+    max-height:88vh; overflow-y:auto; padding-bottom:24px;
+  }
+  .sheet.open{transform:translateY(0);}
+  .sheet-grab{width:40px; height:4px; background:var(--border); border-radius:99px; margin:10px auto 4px;}
+  .sheet-hero{height:120px; display:flex; align-items:center; justify-content:center; font-size:46px; color:#fff; position:relative;}
+  .sheet-hero .close-sheet{
+    position:absolute; top:12px; right:14px; width:32px; height:32px; border-radius:50%;
+    background:rgba(0,0,0,0.3); color:#fff; display:flex; align-items:center; justify-content:center;
+  }
+  .sheet-body{padding:16px 18px;}
+  .sheet-body .stop{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
+  .sheet-body h3{font-size:20px;}
+  .sheet-body .ssub{color:var(--ink-soft); font-size:12.5px; margin-top:4px;}
+  .sheet-body .meta-row{display:flex; gap:14px; margin-top:10px; flex-wrap:wrap;}
+  .sheet-body .meta-row .m{font-size:12px; color:var(--ink-soft); display:flex; gap:5px; align-items:center;}
+  .sheet-actions{display:flex; gap:8px; margin-top:16px;}
+  .sheet-actions a, .sheet-actions button{
+    flex:1; text-align:center; padding:12px 8px; border-radius:12px; font-size:12.5px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; gap:6px; text-decoration:none;
+  }
+  .act-whatsapp{background:#26A05A; color:#fff;}
+  .act-call{background:var(--surface-2); color:var(--ink);}
+  .act-directions{background:var(--brand); color:#fff;}
+  .prod-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px;}
+  .prod{background:var(--surface-2); border-radius:10px; padding:9px 10px; font-size:12px; font-weight:600;}
+  .qr-block{margin-top:18px; display:flex; align-items:center; gap:12px; border-top:1px solid var(--border); padding-top:14px;}
+  .qr-block #qrcanvas{background:#fff; border-radius:8px; padding:6px;}
+  .qr-block .qrtext{font-size:11.5px; color:var(--ink-soft);}
+
+  footer{text-align:center; padding:20px; font-size:11.5px; color:var(--ink-soft);}
+
+  @media (min-width:880px){
+    .stage.split{display:grid; grid-template-columns:380px 1fr; gap:16px; align-items:start;}
+    .map-shell{height:560px; position:sticky; top:96px;}
+    .view-toggle{display:none;}
+    .stage:not(.split) .list-pane{display:block;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header class="top">
+    <div class="top-row">
+      <div class="brand">
+        <div class="mark">A</div>
+        <div>
+          <div class="name">Apo Ultra Modern Market</div>
+          <div class="tag">Find any shop in seconds</div>
+        </div>
+      </div>
+      <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode">🌙</button>
+    </div>
+    <div class="search-wrap">
+      <div class="search-bar">
+        <span>🔍</span>
+        <input id="searchInput" type="text" placeholder="Search beads, shop number, vendor, category…" autocomplete="off">
+        <button class="clear" id="clearSearch" style="display:none;">✕</button>
+      </div>
+      <div class="suggest" id="suggestBox" style="display:none;"></div>
+    </div>
+  </header>
+
+  <div class="chip-rail" id="chipRail"></div>
+
+  <main>
+    <div id="homeExtras"></div>
+
+    <div class="section-title">
+      <h2 id="resultsTitle">All shops</h2>
+      <span class="count" id="resultsCount"></span>
+    </div>
+
+    <div class="view-toggle" id="viewToggle">
+      <button data-view="list" class="active">☰ List</button>
+      <button data-view="map">🗺 Map</button>
+    </div>
+
+    <div class="stage split" id="stage">
+      <div class="list-pane" id="listPane"></div>
+      <div class="map-pane" id="mapPane">
+        <div class="map-shell" id="mapShell">
+          <svg id="mapSvg" viewBox="0 0 1000 680" preserveAspectRatio="xMidYMid meet">
+            <g id="mapInner"></g>
+          </svg>
+          <div class="map-controls">
+            <button id="zoomIn" aria-label="Zoom in">+</button>
+            <button id="zoomOut" aria-label="Zoom out">−</button>
+            <button id="zoomReset" aria-label="Reset view" style="font-size:12px;">⟲</button>
+          </div>
+          <button class="locate-btn" id="locateBtn">📍 You are here</button>
+          <div class="legend" id="legend"></div>
+        </div>
+        <div id="directionsPanel"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer>Apo Ultra Modern Market · Demo prototype · Mock data, no live backend yet</footer>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-grab"></div>
+  <div id="sheetContent"></div>
+</div>
+
+<script>
+/* =========================================================
+   DATA
+========================================================= */
+const ZONES = {
+  fashion:   { name:"Fashion Zone",            color:"#7C5CBF", rect:[40,40,260,220],   entry:[170,260], row:"top" },
+  electronics:{name:"Electronics Zone",        color:"#2C8C8C", rect:[370,40,260,220],  entry:[500,260], row:"top" },
+  beauty:    { name:"Beauty Zone",             color:"#C7608A", rect:[700,40,260,220],  entry:[830,260], row:"top" },
+  beads:     { name:"Beads & Accessories Zone",color:"#B98A2E", rect:[40,320,260,220],  entry:[170,320], row:"bottom" },
+  home:      { name:"Home Essentials Zone",    color:"#4F8F5B", rect:[370,320,260,220], entry:[500,320], row:"bottom" },
+  food:      { name:"Food Zone",               color:"#B5482F", rect:[700,320,260,220], entry:[830,320], row:"bottom" },
+};
+const ENTRANCE = [335,660];
+const JUNCTION = [335,290];
+const ICONS = { Beads:"📿", Jewelry:"💍", Fabrics:"🧵", Shoes:"👟", Electronics:"🔌", Cosmetics:"💄", Food:"🍚", Household:"🏠" };
+
+const SHOPS = [
+  {id:"b12", name:"Beads World", vendor:"Ngozi Eze", number:"B12", zone:"beads", category:"Beads", pos:[100,380], products:["Coral beads","Waist beads","Beaded bracelets"], phone:"2348031234567", rating:4.8, reviews:212, status:"open"},
+  {id:"b18", name:"Crystal Accessories", vendor:"Halima Bello", number:"B18", zone:"beads", category:"Jewelry", pos:[190,420], products:["Crystal beads","Necklaces","Earrings"], phone:"2348039876543", rating:4.6, reviews:158, status:"open"},
+  {id:"b24", name:"Royal Beads Hub", vendor:"Chidinma Okafor", number:"B24", zone:"beads", category:"Beads", pos:[260,480], products:["Premium beads","Custom jewelry","Beaded sandals"], phone:"2348051122334", rating:4.9, reviews:301, status:"open"},
+  {id:"f03", name:"Adire House", vendor:"Yusuf Aliyu", number:"F03", zone:"fashion", category:"Fabrics", pos:[100,90], products:["Adire fabric","Ankara","Lace"], phone:"2348061234001", rating:4.5, reviews:96, status:"open"},
+  {id:"f07", name:"StepRight Shoes", vendor:"Funmi Adebayo", number:"F07", zone:"fashion", category:"Shoes", pos:[190,110], products:["Men's shoes","Women's heels","Sneakers"], phone:"2348071234002", rating:4.3, reviews:74, status:"closed"},
+  {id:"f11", name:"Golden Thread Fabrics", vendor:"Ibrahim Sani", number:"F11", zone:"fashion", category:"Fabrics", pos:[250,190], products:["Aso-oke","Velvet","Silk"], phone:"2348081234003", rating:4.7, reviews:140, status:"open"},
+  {id:"e02", name:"TechHub Apo", vendor:"Tunde Bakare", number:"E02", zone:"electronics", category:"Electronics", pos:[420,90], products:["Phones","Chargers","Power banks"], phone:"2348091234004", rating:4.4, reviews:188, status:"open"},
+  {id:"e05", name:"Bright Electronics", vendor:"Grace Udo", number:"E05", zone:"electronics", category:"Electronics", pos:[520,140], products:["TVs","Home theatre","Extension boxes"], phone:"2348021234005", rating:4.2, reviews:65, status:"open"},
+  {id:"e09", name:"CircuitPoint", vendor:"Samuel Okoro", number:"E09", zone:"electronics", category:"Electronics", pos:[580,200], products:["Laptops","Accessories","Repairs"], phone:"2348031234006", rating:4.6, reviews:121, status:"closed"},
+  {id:"bt01", name:"Glow Cosmetics", vendor:"Aisha Mohammed", number:"BT01", zone:"beauty", category:"Cosmetics", pos:[760,100], products:["Skincare","Makeup","Wigs"], phone:"2348041234007", rating:4.7, reviews:233, status:"open"},
+  {id:"bt05", name:"Pure Beauty Hub", vendor:"Blessing Nwosu", number:"BT05", zone:"beauty", category:"Cosmetics", pos:[880,180], products:["Perfumes","Body care","Haircare"], phone:"2348051234008", rating:4.5, reviews:99, status:"open"},
+  {id:"fd01", name:"Mama Risi Foodstuff", vendor:"Risikat Lawal", number:"FD01", zone:"food", category:"Food", pos:[740,380], products:["Rice","Beans","Garri"], phone:"2348061234009", rating:4.8, reviews:266, status:"open"},
+  {id:"fd04", name:"Spice Route", vendor:"Emeka Nnadi", number:"FD04", zone:"food", category:"Food", pos:[820,420], products:["Spices","Dried fish","Condiments"], phone:"2348071234010", rating:4.4, reviews:87, status:"open"},
+  {id:"fd06", name:"Fresh Harvest", vendor:"Patience Etim", number:"FD06", zone:"food", category:"Food", pos:[900,480], products:["Vegetables","Fruits","Tubers"], phone:"2348081234011", rating:4.3, reviews:54, status:"open"},
+  {id:"h02", name:"HomeStyle Essentials", vendor:"Olamide Fashola", number:"H02", zone:"home", category:"Household", pos:[430,400], products:["Kitchenware","Storage","Bedding"], phone:"2348091234012", rating:4.5, reviews:112, status:"open"},
+  {id:"h06", name:"Bright Homes", vendor:"Victor Ude", number:"H06", zone:"home", category:"Household", pos:[560,470], products:["Curtains","Rugs","Decor"], phone:"2348021234013", rating:4.2, reviews:48, status:"closed"},
+];
+
+const CATEGORIES = ["Beads","Fabrics","Shoes","Electronics","Cosmetics","Food","Jewelry","Household"];
+
+/* =========================================================
+   STATE
+========================================================= */
+let state = {
+  query:"",
+  category:null,
+  view: window.innerWidth >= 880 ? "split" : "list",
+  selectedShop:null,
+  showDirections:false,
+  zoom:1,
+  panX:0, panY:0,
+};
+
+/* =========================================================
+   HELPERS
+========================================================= */
+function dist(a,b){ return Math.hypot(a[0]-b[0], a[1]-b[1]); }
+function fmtStars(r){
+  const full = Math.round(r);
+  return "★".repeat(full) + "☆".repeat(5-full);
+}
+function shopMatches(shop, q){
+  if(!q) return true;
+  q = q.toLowerCase();
+  return shop.name.toLowerCase().includes(q) ||
+         shop.number.toLowerCase().includes(q) ||
+         shop.vendor.toLowerCase().includes(q) ||
+         shop.category.toLowerCase().includes(q) ||
+         ZONES[shop.zone].name.toLowerCase().includes(q) ||
+         shop.products.some(p=>p.toLowerCase().includes(q));
+}
+function filteredShops(){
+  return SHOPS.filter(s=>
+    shopMatches(s,state.query) &&
+    (!state.category || s.category===state.category)
+  );
+}
+function routeFor(shop){
+  const zone = ZONES[shop.zone];
+  const corridorY = 290;
+  const zoneEdgeY = zone.row === "top" ? zone.rect[1]+zone.rect[3] : zone.rect[1];
+  return [
+    ENTRANCE,
+    JUNCTION,
+    [zone.entry[0], corridorY],
+    [zone.entry[0], zoneEdgeY],
+    [shop.pos[0], zoneEdgeY],
+    shop.pos
+  ];
+}
+function routeStats(route){
+  let d=0;
+  for(let i=1;i<route.length;i++) d += dist(route[i-1],route[i]);
+  const meters = Math.round(d*0.08);
+  const minutes = Math.max(1, Math.round((meters/1.2)/60*10)/10);
+  return {meters, minutes: Math.ceil(minutes)};
+}
+function directionSteps(shop){
+  const zone = ZONES[shop.zone];
+  const turn = zone.entry[0] < ENTRANCE[0] ? "left" : zone.entry[0] > ENTRANCE[0] ? "right" : "straight";
+  const side = shop.pos[0] < zone.entry[0] ? "left" : "right";
+  const reach = zone.row === "top" ? "Continue straight and enter the zone at the far end." : "Continue straight ahead into the zone entrance.";
+  return [
+    "Exit the Main Entrance and head straight up the central walkway.",
+    `At the junction, turn ${turn} toward ${zone.name} — look for the coloured zone signage overhead.`,
+    reach,
+    `Shop ${shop.number} — ${shop.name} is on your ${side}, marked with gold shop signage.`
+  ];
+}
+
+/* =========================================================
+   RENDER: CHIPS
+========================================================= */
+function renderChips(){
+  const rail = document.getElementById('chipRail');
+  rail.innerHTML = "";
+  const allChip = document.createElement('button');
+  allChip.className = 'chip' + (state.category===null ? ' active':'');
+  allChip.textContent = "All";
+  allChip.onclick = ()=>{ state.category=null; renderAll(); };
+  rail.appendChild(allChip);
+  CATEGORIES.forEach(cat=>{
+    const c = document.createElement('button');
+    c.className = 'chip' + (state.category===cat ? ' active':'');
+    c.innerHTML = `${ICONS[cat]} ${cat}`;
+    c.onclick = ()=>{ state.category = state.category===cat ? null : cat; renderAll(); };
+    rail.appendChild(c);
+  });
+}
+
+/* =========================================================
+   RENDER: HOME EXTRAS (announcement + featured) — only when no active search/filter
+========================================================= */
+function renderHomeExtras(){
+  const el = document.getElementById('homeExtras');
+  if(state.query || state.category){ el.innerHTML=""; return; }
+  const featured = [...SHOPS].sort((a,b)=>b.rating-a.rating).slice(0,5);
+  el.innerHTML = `
+    <div class="announce">📣 <div><b>Market hours:</b> 7:00am – 8:00pm daily. Eid block sale this weekend across the Fashion Zone — look for gold banners.</div></div>
+    <div class="section-title"><h2>Featured shops</h2><span class="count">Top rated this week</span></div>
+    <div class="featured-rail" id="featuredRail"></div>
+  `;
+  const rail = document.getElementById('featuredRail');
+  featured.forEach(s=>{
+    const card = document.createElement('div');
+    card.className = 'feat-card';
+    card.innerHTML = `
+      <div class="tile" style="background:${ZONES[s.zone].color}">${ICONS[s.category]}<span class="num mono">${s.number}</span></div>
+      <div class="body">
+        <div class="sname">${s.name}</div>
+        <div class="ssub">${ZONES[s.zone].name.replace(' Zone','')} · ★ ${s.rating}</div>
+      </div>`;
+    card.onclick = ()=> openShop(s.id);
+    rail.appendChild(card);
+  });
+}
+
+/* =========================================================
+   RENDER: LIST
+========================================================= */
+function renderList(){
+  const shops = filteredShops();
+  document.getElementById('resultsTitle').textContent = state.query ? `Results for “${state.query}”` : (state.category ? `${state.category} shops` : "All shops");
+  document.getElementById('resultsCount').textContent = `${shops.length} shop${shops.length!==1?'s':''}`;
+  const pane = document.getElementById('listPane');
+  if(shops.length===0){
+    pane.innerHTML = `<div class="empty-state"><div class="em">🔎</div>No shops match this search yet.<br>Try a category like Beads or Electronics, or check the spelling.</div>`;
+    return;
+  }
+  pane.innerHTML = shops.map(s=>`
+    <div class="result-card" data-id="${s.id}">
+      <div class="tile" style="background:${ZONES[s.zone].color}">${ICONS[s.category]}</div>
+      <div class="info">
+        <div class="row1">
+          <div class="rname">${s.name}</div>
+          <div class="shopno mono">${s.number}</div>
+        </div>
+        <div class="rmeta">${ZONES[s.zone].name} · Ground Floor</div>
+        <div class="rmeta"><span class="stars">${fmtStars(s.rating)}</span> ${s.rating} (${s.reviews}) · <span class="badge ${s.status}">${s.status==='open'?'Open now':'Closed'}</span></div>
+        <div class="rprods">${s.products.slice(0,3).join(' · ')}</div>
+        <div class="row-actions">
+          <button class="pill-btn ghost" onclick="event.stopPropagation(); openShop('${s.id}')">View shop</button>
+          <button class="pill-btn" onclick="event.stopPropagation(); openShop('${s.id}', true)">📍 Directions</button>
+        </div>
+      </div>
+    </div>
+  `).join("");
+  pane.querySelectorAll('.result-card').forEach(card=>{
+    card.onclick = ()=> openShop(card.dataset.id);
+  });
+}
+
+/* =========================================================
+   RENDER: MAP
+========================================================= */
+function buildMap(){
+  const g = document.getElementById('mapInner');
+  let html = "";
+  // walkway guides
+  html += `<line x1="${ENTRANCE[0]}" y1="${ENTRANCE[1]}" x2="${JUNCTION[0]}" y2="${JUNCTION[1]}" stroke="rgba(120,130,150,0.35)" stroke-width="14" stroke-dasharray="2 10" stroke-linecap="round"/>`;
+  html += `<line x1="170" y1="290" x2="830" y2="290" stroke="rgba(120,130,150,0.35)" stroke-width="14" stroke-dasharray="2 10" stroke-linecap="round"/>`;
+  // zones
+  Object.entries(ZONES).forEach(([key,z])=>{
+    const [x,y,w,h] = z.rect;
+    html += `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="22" fill="${z.color}" opacity="0.92" data-zone="${key}"/>`;
+    html += `<text class="zone-label" x="${x+w/2}" y="${y+18}" text-anchor="middle" font-size="13">${z.name}</text>`;
+  });
+  // entrance marker
+  html += `<g id="entranceMarker"><circle cx="${ENTRANCE[0]}" cy="${ENTRANCE[1]}" r="10" fill="#0B2A4A"/><circle id="pulseDot" cx="${ENTRANCE[0]}" cy="${ENTRANCE[1]}" r="10" fill="#0B2A4A" opacity="0.5"/>
+    <text x="${ENTRANCE[0]}" y="${ENTRANCE[1]+26}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--ink)" font-family="Plus Jakarta Sans">Main Entrance</text></g>`;
+  // route placeholder
+  html += `<path id="routePath" d="" fill="none" stroke="${getComputedStyle(document.documentElement).getPropertyValue('--gold')}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0"/>`;
+  // pins
+  SHOPS.forEach(s=>{
+    const sel = state.selectedShop === s.id;
+    html += `<g class="pin" data-id="${s.id}" style="cursor:pointer;" transform="translate(${s.pos[0]},${s.pos[1]})">
+      <circle r="${sel?14:9}" fill="${sel? '#FFFFFF':'#16223A'}" stroke="${sel? ZONES[s.zone].color : 'transparent'}" stroke-width="3"/>
+      <circle r="${sel?6:3.5}" fill="${sel? ZONES[s.zone].color :'#fff'}"/>
+      ${sel?`<text class="pin-label" y="-20" text-anchor="middle" font-family="JetBrains Mono" font-weight="700" fill="#16223A">${s.number}</text>`:""}
+    </g>`;
+  });
+  g.innerHTML = html;
+  g.querySelectorAll('.pin').forEach(p=>{
+    p.addEventListener('click', (e)=>{ e.stopPropagation(); openShop(p.dataset.id); });
+  });
+  pulseAnim();
+  if(state.selectedShop) drawRoute(state.selectedShop);
+  applyTransform();
+}
+function pulseAnim(){
+  const dot = document.getElementById('pulseDot');
+  if(!dot) return;
+  dot.animate(
+    [{r:10,opacity:0.5},{r:24,opacity:0}],
+    {duration:1600, iterations:Infinity}
+  );
+}
+function drawRoute(shopId){
+  const shop = SHOPS.find(s=>s.id===shopId);
+  if(!shop) return;
+  const route = routeFor(shop);
+  const d = "M " + route.map(p=>p.join(",")).join(" L ");
+  const path = document.getElementById('routePath');
+  if(!path) return;
+  path.setAttribute('d', d);
+  const len = path.getTotalLength();
+  path.style.transition = 'none';
+  path.setAttribute('stroke-dasharray', len);
+  path.setAttribute('stroke-dashoffset', len);
+  path.style.opacity = 1;
+  requestAnimationFrame(()=>{
+    path.style.transition = 'stroke-dashoffset 1.1s ease-out';
+    path.setAttribute('stroke-dashoffset', 0);
+  });
+}
+function applyTransform(){
+  const inner = document.getElementById('mapInner');
+  inner.setAttribute('transform', `translate(${state.panX},${state.panY}) scale(${state.zoom})`);
+}
+function focusOn(shop){
+  const shell = document.getElementById('mapShell');
+  const rect = shell.getBoundingClientRect();
+  const scaleX = rect.width/1000, scaleY = rect.height/680;
+  const baseScale = Math.min(scaleX,scaleY);
+  state.zoom = 1.6;
+  // viewBox 1000x680 mapped to rect via preserveAspectRatio; approximate centering:
+  state.panX = (1000/2/state.zoom) - shop.pos[0] + (1000/2)*(1-1/state.zoom)*0;
+  state.panX = (1000/2) - shop.pos[0]*state.zoom + (1000/2)*(1-state.zoom)*0;
+  state.panX = (500 - shop.pos[0]*state.zoom);
+  state.panY = (340 - shop.pos[1]*state.zoom);
+  applyTransform();
+}
+
+/* Map drag + zoom */
+function wireMapInteractions(){
+  const svg = document.getElementById('mapSvg');
+  let dragging=false, lastX=0,lastY=0;
+  svg.addEventListener('pointerdown',(e)=>{ dragging=true; lastX=e.clientX; lastY=e.clientY; svg.setPointerCapture(e.pointerId);});
+  svg.addEventListener('pointermove',(e)=>{
+    if(!dragging) return;
+    const rect = svg.getBoundingClientRect();
+    const scale = 1000/rect.width;
+    state.panX += (e.clientX-lastX)*scale;
+    state.panY += (e.clientY-lastY)*scale;
+    lastX=e.clientX; lastY=e.clientY;
+    applyTransform();
+  });
+  ['pointerup','pointerleave','pointercancel'].forEach(evt=>svg.addEventListener(evt,()=>dragging=false));
+  document.getElementById('zoomIn').onclick = ()=>{ state.zoom=Math.min(2.6,state.zoom*1.25); applyTransform(); };
+  document.getElementById('zoomOut').onclick = ()=>{ state.zoom=Math.max(0.6,state.zoom/1.25); applyTransform(); };
+  document.getElementById('zoomReset').onclick = ()=>{ state.zoom=1; state.panX=0; state.panY=0; applyTransform(); };
+  document.getElementById('locateBtn').onclick = ()=>{
+    state.zoom=1.4; state.panX = 500-ENTRANCE[0]*1.4; state.panY = 480-ENTRANCE[1]*1.4; applyTransform();
+  };
+}
+
+/* Legend */
+function renderLegend(){
+  const el = document.getElementById('legend');
+  el.innerHTML = Object.values(ZONES).map(z=>`<div class="lg-item"><span class="sw" style="background:${z.color}"></span>${z.name.replace(' Zone','')}</div>`).join("");
+}
+
+/* =========================================================
+   DIRECTIONS PANEL
+========================================================= */
+function renderDirections(){
+  const el = document.getElementById('directionsPanel');
+  if(!state.showDirections || !state.selectedShop){ el.innerHTML=""; return; }
+  const shop = SHOPS.find(s=>s.id===state.selectedShop);
+  const route = routeFor(shop);
+  const stats = routeStats(route);
+  const steps = directionSteps(shop);
+  el.innerHTML = `
+    <div class="directions">
+      <div class="dhead">
+        <div>
+          <h3 style="font-size:16px;">Directions to ${shop.name}</h3>
+          <div class="ssub" style="color:var(--ink-soft); font-size:12px;">Shop ${shop.number} · ${ZONES[shop.zone].name}</div>
+        </div>
+      </div>
+      <div class="dstats">
+        <div class="dstat"><b>${stats.meters} m</b><span>Distance</span></div>
+        <div class="dstat"><b>~${stats.minutes} min</b><span>Walking time</span></div>
+      </div>
+      <ol class="steps">
+        ${steps.map((s,i)=>`<li><span class="stepnum">${i+1}</span><span>${s}</span></li>`).join("")}
+      </ol>
+      <button class="close-directions" onclick="closeDirections()">✕ Close directions</button>
+    </div>
+  `;
+}
+function closeDirections(){ state.showDirections=false; renderDirections(); buildMap(); }
+
+/* =========================================================
+   SHOP SHEET
+========================================================= */
+function openShop(id, withDirections){
+  state.selectedShop = id;
+  state.showDirections = !!withDirections;
+  const shop = SHOPS.find(s=>s.id===id);
+  const zone = ZONES[shop.zone];
+  const sheetEl = document.getElementById('sheetContent');
+  sheetEl.innerHTML = `
+    <div class="sheet-hero" style="background:${zone.color}">
+      ${ICONS[shop.category]}
+      <button class="close-sheet" onclick="closeSheet()">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div class="stop">
+        <div>
+          <h3>${shop.name}</h3>
+          <div class="ssub">${shop.vendor} · ${zone.name}</div>
+        </div>
+        <div class="shopno mono" style="white-space:nowrap;">${shop.number}</div>
+      </div>
+      <div class="meta-row">
+        <div class="m"><span class="stars">${fmtStars(shop.rating)}</span> ${shop.rating} (${shop.reviews})</div>
+        <div class="m"><span class="badge ${shop.status}">${shop.status==='open'?'Open now':'Closed'}</span></div>
+        <div class="m">📍 Ground Floor</div>
+      </div>
+      <div class="sheet-actions">
+        <a class="act-whatsapp" href="https://wa.me/${shop.phone}" target="_blank" rel="noopener">💬 WhatsApp</a>
+        <a class="act-call" href="tel:+${shop.phone}">📞 Call</a>
+        <button class="act-directions" onclick="goDirections('${shop.id}')">📍 Directions</button>
+      </div>
+      <div class="section-title" style="margin:18px 2px 4px;"><h2 style="font-size:14px;">Products</h2></div>
+      <div class="prod-grid">
+        ${shop.products.map(p=>`<div class="prod">${p}</div>`).join("")}
+      </div>
+      <div class="qr-block">
+        <div id="qrcanvas"></div>
+        <div class="qrtext">Scan to open this shop's profile on any phone — handy for in-store signage.</div>
+      </div>
+    </div>
+  `;
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('sheet').classList.add('open');
+  document.getElementById('overlay').onclick = closeSheet;
+  setTimeout(()=>{
+    const qrEl = document.getElementById('qrcanvas');
+    if(qrEl && window.QRCode){
+      qrEl.innerHTML="";
+      new QRCode(qrEl, {text:`https://apoultramarket.ng/shop/${shop.id}`, width:84, height:84, colorDark:"#0B2A4A", colorLight:"#ffffff"});
+    }
+  },50);
+  if(withDirections){ goDirections(id, true); }
+  buildMap();
+}
+function closeSheet(){
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('sheet').classList.remove('open');
+}
+function goDirections(id, skipReopen){
+  state.selectedShop = id;
+  state.showDirections = true;
+  if(!skipReopen) closeSheet();
+  if(state.view==='list') setView('split');
+  renderDirections();
+  buildMap();
+  const shop = SHOPS.find(s=>s.id===id);
+  setTimeout(()=>focusOn(shop), skipReopen?250:0);
+  document.getElementById('mapPane').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* =========================================================
+   SEARCH + SUGGESTIONS
+========================================================= */
+function renderSuggestions(){
+  const box = document.getElementById('suggestBox');
+  const q = state.query.trim();
+  if(!q){ box.style.display='none'; return; }
+  const matches = filteredShops().slice(0,6);
+  if(matches.length===0){ box.style.display='none'; return; }
+  box.style.display='block';
+  box.innerHTML = matches.map(s=>`
+    <button data-id="${s.id}">
+      <span class="sg-icon">${ICONS[s.category]}</span>
+      <span style="flex:1;">${s.name}<div class="sg-sub">${s.number} · ${ZONES[s.zone].name}</div></span>
+    </button>
+  `).join("");
+  box.querySelectorAll('button').forEach(b=>{
+    b.onclick = ()=>{ box.style.display='none'; openShop(b.dataset.id); };
+  });
+}
+
+/* =========================================================
+   VIEW TOGGLE (mobile)
+========================================================= */
+function setView(v){
+  state.view = v;
+  const stage = document.getElementById('stage');
+  const listPane = document.getElementById('listPane');
+  const mapPane = document.getElementById('mapPane');
+  document.querySelectorAll('#viewToggle button').forEach(b=>b.classList.toggle('active', b.dataset.view===v));
+  if(window.innerWidth>=880){ stage.classList.add('split'); listPane.style.display='block'; mapPane.style.display='block'; return; }
+  stage.classList.remove('split');
+  listPane.style.display = v==='list' ? 'block':'none';
+  mapPane.style.display = v==='map' ? 'block':'none';
+}
+
+/* =========================================================
+   MASTER RENDER
+========================================================= */
+function renderAll(){
+  renderChips();
+  renderHomeExtras();
+  renderList();
+  buildMap();
+  renderLegend();
+  renderDirections();
+}
+
+/* =========================================================
+   INIT
+========================================================= */
+document.getElementById('searchInput').addEventListener('input', (e)=>{
+  state.query = e.target.value;
+  document.getElementById('clearSearch').style.display = state.query ? 'block':'none';
+  renderSuggestions();
+  renderHomeExtras();
+  renderList();
+});
+document.getElementById('clearSearch').addEventListener('click', ()=>{
+  state.query=""; document.getElementById('searchInput').value="";
+  document.getElementById('clearSearch').style.display='none';
+  document.getElementById('suggestBox').style.display='none';
+  renderHomeExtras(); renderList();
+});
+document.addEventListener('click', (e)=>{
+  if(!e.target.closest('.search-wrap')) document.getElementById('suggestBox').style.display='none';
+});
+document.querySelectorAll('#viewToggle button').forEach(b=> b.addEventListener('click', ()=> setView(b.dataset.view)));
+document.getElementById('themeToggle').addEventListener('click', ()=>{
+  const html = document.documentElement;
+  const next = html.getAttribute('data-theme')==='light' ? 'dark':'light';
+  html.setAttribute('data-theme', next);
+  document.getElementById('themeToggle').textContent = next==='light' ? '🌙' : '☀️';
+  buildMap();
+});
+window.addEventListener('resize', ()=> setView(state.view==='split'?'list':state.view));
+
+wireMapInteractions();
+setView(state.view);
+renderAll();
+</script>
+</body>
+</html>
